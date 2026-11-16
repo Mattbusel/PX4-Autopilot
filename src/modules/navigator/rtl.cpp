@@ -284,16 +284,11 @@ void RTL::setRtlTypeAndDestination()
 					       && (time_to_home.safe_time_estimate < worst_battery_time_s);
 
 		if (!home_within_reach) {
-			// If battery data is valid, home is out of range: pick the closest rally point unconditionally
-			// If battery data is unavailable (NaN), we cannot assess reachability: pick the closest home or rally point
-			const float min_dist = PX4_ISFINITE(worst_battery_time_s)
-					       ? FLT_MAX
-					       : get_distance_to_next_waypoint(_global_pos_sub.get().lat,
-							       _global_pos_sub.get().lon,
-							       _home_pos_sub.get().lat,
-							       _home_pos_sub.get().lon);
+			// Home is out of reach or not estimated: a rally point replaces Home only if it is closer
+			const float home_dist = get_distance_to_next_waypoint(_global_pos_sub.get().lat, _global_pos_sub.get().lon,
+						_home_pos_sub.get().lat, _home_pos_sub.get().lon);
 
-			PositionYawSetpoint safe_point = findClosestSafePoint(min_dist, safe_point_index);
+			PositionYawSetpoint safe_point = findClosestSafePoint(home_dist, safe_point_index);
 
 			if (safe_point_index != UINT8_MAX) {
 				destination = safe_point;
